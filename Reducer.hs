@@ -4,13 +4,36 @@ module Reducer where
 import Data.Monoid
 
 -- | A naive solution to summing up an average.
-avg0 xs = fromIntegral (sum xs) / fromIntegral (length xs)
+avg0 xs = sum xs / fromIntegral (length xs)
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- | Second try:
 --   This time through threading a tuple as accumulator.
-avg1 xs = fromIntegral s / fromIntegral n
+avg1 xs = s / fromIntegral n
   where
     (s, n) = foldl (\(s, i) x -> (s + x, i + 1) ) (0, 0) xs
+
+
+
+
+
+
+
+
+
+
+
 
 
 -- | Third try:
