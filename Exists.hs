@@ -5,7 +5,9 @@ module Exists where
 import Prelude hiding (head, take)
 
 data IntStream
-  = forall a. MkIntStream a (a -> (Int, a))
+  = forall a. MkIntStream
+                a                -- seed
+                (a -> (Int, a))  -- get
 
 naturals :: IntStream
 naturals = MkIntStream 0 (\n -> (n, n+1))
@@ -14,14 +16,14 @@ naturalsList :: IntStream
 naturalsList = MkIntStream [] (\l -> (length l, ():l))
 
 head :: IntStream -> Int
-head (MkIntStream new get) = fst $ get new
+head (MkIntStream seed get) = fst $ get seed
 
 take :: Int -> IntStream -> [Int]
-take x (MkIntStream new get) = go x new
-  where go x' stream = if x' <= 0
+take x (MkIntStream seed get) = go x seed
+  where go x' state = if x' <= 0
           then []
-          else let (result, newStream) = get stream
-               in result:(go (x'-1) newStream)
+          else let (result, newState) = get state
+               in result:(go (x'-1) newState)
 
 test :: IO ()
 test = do

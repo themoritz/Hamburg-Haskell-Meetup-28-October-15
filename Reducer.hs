@@ -61,3 +61,19 @@ avg2 = (/) <$> sumr <*> lengthr
 
 reduce :: Foldable t => Reducer a b -> t a -> b
 reduce (R f g) = g . foldMap f
+
+test :: IO ()
+test = do
+  print $ reduce avg2 [4,5,9]
+
+
+
+
+
+
+
+
+
+
+
+

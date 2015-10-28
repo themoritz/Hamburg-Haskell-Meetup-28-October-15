@@ -14,6 +14,7 @@ import qualified Text.Parsec.Language as Tok
 import qualified Text.Parsec.Expr     as Ex
 
 import qualified Exists
+import qualified Reducer
 
 -- Untyped Expressions
 
@@ -108,9 +109,10 @@ typecheckExpression (UBinop op lhs rhs) = do
     (Add,   TypeInt,  TypeInt)  -> Right $ TAdd   leftChecked rightChecked ::: TypeInt
     (And,   TypeBool, TypeBool) -> Right $ TAnd   leftChecked rightChecked ::: TypeBool
     (Equal, TypeInt,  TypeInt)  -> Right $ TEqual leftChecked rightChecked ::: TypeBool
-    _-> Left $ "Type error! Expressions `" ++ show leftChecked ++ "` and `" ++ show rightChecked ++ "` have wrong types for operator `" ++ show op ++ "`: `" ++ show leftType ++ "`, `" ++ show rightType ++ "`."
+    _ -> Left $ "Type error! Expressions `" ++ show leftChecked ++ "` and `" ++ show rightChecked ++ "` have wrong types for operator `" ++ show op ++ "`: `" ++ show leftType ++ "`, `" ++ show rightType ++ "`."
 
 -- Eval
+
 
 eval :: TExpr a -> a
 eval (TNumber x)      = x
@@ -118,16 +120,34 @@ eval (TAdd lhs rhs)   = eval lhs + eval rhs
 eval (TAnd lhs rhs)   = eval lhs && eval rhs
 eval (TEqual lhs rhs) = eval lhs == eval rhs
 
+-- Alternative: Eval the untyped expression
+
+evalUInt :: UExpr -> Either String Integer
+evalUInt (UNumber x) = Right x
+evalUInt (UBinop op lhs rhs) = case op of
+  Add -> (+) <$> evalUInt lhs <*> evalUInt rhs
+  _ -> Left "type error"
+
+evalUBool :: UExpr -> Either String Bool
+evalUBool (UNumber _) = Left "type error"
+evalUBool (UBinop op lhs rhs) = case op of
+  And -> (&&) <$> evalUBool lhs <*> evalUBool rhs
+  Equal -> (==) <$> evalUInt lhs <*> evalUInt rhs
+  _ -> Left "type error"
+
 -- Main
 
 main :: IO ()
 main = do
   Exists.test
   putStrLn ""
-  case parseExpression "2 and 3" of
+  Reducer.test
+  putStrLn ""
+  case parseExpression "3 == 3 and 2 == 1 + 1" of
     Left err -> print err
     Right expr -> do
       print expr
+      print $ evalUBool expr
       case typecheckExpression expr of
         Left err -> putStrLn err
         Right (checkedExpr ::: _) -> do
